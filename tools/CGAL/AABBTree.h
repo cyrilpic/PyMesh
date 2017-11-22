@@ -28,6 +28,9 @@ class AABBTree {
         typedef CGAL::AABB_tree<AABB_triangle_traits> Tree;
         typedef std::shared_ptr<Tree> TreePtr;
         typedef Tree::Point_and_primitive_id Point_and_primitive_id;
+    
+        typedef Tree::Primitive_id Primitive_id;
+        typedef std::list<Tree::Primitive_id> Intersections;
 
     public:
         AABBTree(const MatrixFr& vertices, const MatrixIr& faces) {
@@ -99,6 +102,31 @@ class AABBTree {
                 Point p2 = itr.first;
                 closest_points.row(i) = to_eigen_point(p2);
                 squared_dists[i] = (p-p2).squared_length();
+            }
+        }
+    
+        void look_up_all_intersections_with_segment(const MatrixFr& vertices,
+                                                    const MatrixIr& edges,
+                                                    std::vector<VectorI> &intersected_face_indices) {
+            assert(vertices.cols() == m_dim);
+            assert(edges.cols() == 2);
+            const size_t num_edges = edges.rows();
+            intersected_face_indices.resize(num_edges);
+            
+            for (size_t i=0; i<num_edges; i++) {
+                Vector2I e = edges.row(i);
+                const Point p1 = to_cgal_point(vertices.row(e[0]));
+                const Point p2 = to_cgal_point(vertices.row(e[1]));
+                Segment s(p1, p2);
+                Intersections intersections;
+                m_tree->all_intersected_primitives(s, std::back_inserter(intersections));
+                intersected_face_indices[i].resize(intersections.size());
+                int j = 0;
+                for (Primitive_id it : intersections) {
+                    const int face_id = it - m_triangles.begin();
+                    intersected_face_indices[i][j] = face_id;
+                    j++;
+                }
             }
         }
 

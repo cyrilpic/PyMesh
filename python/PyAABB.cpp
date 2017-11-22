@@ -39,5 +39,12 @@ void init_AABB(py::module &m) {
                         squared_dists,
                         closest_face_indices,
                         closest_points);
-                });
+                })
+        .def("look_up_all_intersections_with_segment",
+             [](AABBTree& tree, const MatrixFr& vertices, const MatrixIr& edges) {
+                 std::vector<VectorI> intersected_face_indices;
+                 tree.look_up_all_intersections_with_segment(
+                    vertices, edges, intersected_face_indices);
+                 return intersected_face_indices;
+             });
 }

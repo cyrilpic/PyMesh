@@ -24,6 +24,9 @@ class AABBTree:
     def do_intersect_segments(self, vertices, edges):
         return self.__raw_tree.do_intersect_segments(vertices, edges).squeeze();
 
+    def all_segment_intersection(self, vertices, edges):
+        return self.__raw_tree.look_up_all_intersections_with_segment(vertices, edges)
+
 
 def distance_to_mesh(mesh, pts):
     """ Compute the distance from a set of points to a mesh.
@@ -47,6 +50,30 @@ def distance_to_mesh(mesh, pts):
     squared_distances, face_indices, closest_points =\
             tree.look_up_with_closest_points(pts);
     return squared_distances, face_indices, closest_points;
+
+
+def all_intersections(mesh, vertices, edges):
+    """ Compute all intersections between the mesh and the segments defined
+        by the vertices and edges
+        
+        Args:
+        mesh (:class:`Mesh`): A input mesh.
+        pts (:class:`numpy.ndarray`): A :math:`N \\times dim` array of query
+        points.
+        
+        Returns:
+        Three values are returned.
+        
+        * ``squared_distances``: squared distances from each point to mesh.
+        * ``face_indices``  : the closest face to each point.
+        * ``closest_points``: the point on mesh that is closest to each
+        query point.
+        """
+    
+    tree = AABBTree();
+    tree.load_mesh(mesh);
+    return tree.all_segment_intersection(vertices, edges);
+
 
 def do_intersect(mesh, nodes, elements):
     """ Check if each element intersects the mesh.
