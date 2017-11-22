@@ -4,7 +4,7 @@
 	shallow = true
 [submodule "third_party/carve"]
 	path = third_party/carve
-	url = https://github.com/qnzhou/carve.git
+	url = https://github.com/cyrilpic/carve.git
 	shallow = true
 [submodule "third_party/cork"]
 	path = third_party/cork
