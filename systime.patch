@@ -1,0 +1,12 @@
+diff --git src/util/prelude.h src/util/prelude.h
+index 00329aa..3e023d3 100644
+--- src/util/prelude.h
++++ src/util/prelude.h
+@@ -28,6 +28,7 @@
+ #include <cmath>
+ #include <cstdlib>
+ #include <ctime>
++#include <sys/time.h>
+ #include <algorithm>
+ #include <iostream>
+ 
