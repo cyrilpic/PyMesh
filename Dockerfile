@@ -30,4 +30,5 @@ RUN echo "@edge http://alpine.gliderlabs.com/alpine/edge/community" >> /etc/apk/
     apk --no-cache add --virtual .rundeps $runDeps && \
     apk --no-cache del .build-deps-edge && \
     apk --no-cache del .build-deps && \
-    find ./ -not -name python -not -path ./ -maxdepth 1 -exec rm -rv {} \;
+    cd /root && \
+    rm -R PyMesh
