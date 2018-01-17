@@ -19,6 +19,10 @@
 #include "Triangle/TriangleConvexHullEngine.h"
 #endif
 
+#ifdef WITH_TETGEN
+#include "TetGen/TetGenConvexHullEngine.h"
+#endif
+
 using namespace PyMesh;
 
 namespace ConvexHullEngineHelper {
@@ -39,16 +43,16 @@ ConvexHullEngine::Ptr ConvexHullEngine::create(
         size_t dim, const std::string& library_name) {
 #ifdef WITH_QHULL
     if (library_name == "qhull") {
-        return Ptr(new QhullEngine);
+        return std::make_shared<QhullEngine>();
     }
 #endif
 
 #ifdef WITH_CGAL
     if (library_name == "cgal") {
         if (dim == 2) {
-            return Ptr(new CGALConvexHull2D);
+            return std::make_shared<CGALConvexHull2D>();
         } else if (dim == 3) {
-            return Ptr(new CGALConvexHull3D);
+            return std::make_shared<CGALConvexHull3D>();
         } else {
             std::stringstream err_msg;
             err_msg << "CGAL convex hull does not support dim=" << dim;
@@ -60,10 +64,22 @@ ConvexHullEngine::Ptr ConvexHullEngine::create(
 #ifdef WITH_TRIANGLE
     if (library_name == "triangle") {
         if (dim == 2) {
-            return Ptr(new TriangleConvexHullEngine);
+            return std::make_shared<TriangleConvexHullEngine>();
         } else {
             std::stringstream err_msg;
             err_msg << "Triangle convex hull does not support dim=" << dim;
+            throw NotImplementedError(err_msg.str());
+        }
+    }
+#endif
+
+#ifdef WITH_TETGEN
+    if (library_name == "tetgen") {
+        if (dim == 3) {
+            return std::make_shared<TetGenConvexHullEngine>();
+        } else {
+            std::stringstream err_msg;
+            err_msg << "Tetgen convex hull does not support dim=" << dim;
             throw NotImplementedError(err_msg.str());
         }
     }
@@ -82,6 +98,12 @@ bool ConvexHullEngine::supports(
 #endif
 #ifdef WITH_CGAL
     if ((library_name) == "cgal") return true;
+#endif
+#ifdef WITH_TRIANGLE
+    if ((library_name) == "triangle") return true;
+#endif
+#ifdef WITH_TETGEN
+    if ((library_name) == "tetgen") return true;
 #endif
     return false;
 }

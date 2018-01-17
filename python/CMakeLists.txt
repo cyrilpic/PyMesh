@@ -6,6 +6,7 @@ PYBIND11_ADD_MODULE(PyMesh module.cpp
     PyConvexHull.cpp
     PyDMAT.cpp
     PyFEM.cpp
+    PyIGL.cpp
     PyMeshUtils.cpp
     PyMesh.cpp
     PyMeshFactory.cpp
@@ -13,6 +14,7 @@ PYBIND11_ADD_MODULE(PyMesh module.cpp
     PyOuterHull.cpp
     PyPredicates.cpp
     PySelfIntersectionResolver.cpp
+    PyTetgen.cpp
     PyTetrahedralization.cpp
     PyTriangle.cpp
     PyTriangulation.cpp

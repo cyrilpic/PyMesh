@@ -22,6 +22,7 @@ from .boolean import boolean
 from .convex_hull import convex_hull
 from .CSGTree import CSGTree
 from .exact_arithmetic import Gmpz, Gmpq
+from .HarmonicSolver import HarmonicSolver
 from .material import Material
 from .selfintersection import resolve_self_intersection
 from .selfintersection import detect_self_intersection
@@ -39,6 +40,7 @@ from .minkowski_sum import minkowski_sum
 from .cell_partition import partition_into_cells
 from .aabb_tree import AABBTree, distance_to_mesh, do_intersect
 from .triangle import triangle
+from .tetgen import tetgen
 from .triangulate import triangulate_beta
 from .wires import *
 
@@ -70,13 +72,15 @@ __all__ = [
         "slice_mesh",
         "triangle",
         "triangulate_beta",
+        "tetgen",
         "tetrahedralize",
         "minkowski_sum",
         "partition_into_cells",
         "AABBTree",
         "distance_to_mesh",
         "do_intersect",
-        "VoxelGrid"
+        "VoxelGrid",
+        "HarmonicSolver"
         ];
 __all__ += meshutils.__all__;
 __all__ += misc.__all__;

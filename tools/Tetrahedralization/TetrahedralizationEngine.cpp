@@ -8,6 +8,8 @@
 #include <Core/Exception.h>
 
 #if WITH_CGAL
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include "CGAL/CGALMeshGen.h"
 #endif
 
@@ -23,12 +25,37 @@
 #include "Quartet/QuartetEngine.h"
 #endif
 
+#if WITH_MMG
+#include "MMG/MMGEngine.h"
+#endif
+
 using namespace PyMesh;
 
 TetrahedralizationEngine::Ptr TetrahedralizationEngine::create(
         const std::string& engine_name) {
 #if WITH_CGAL
-    if (engine_name == "cgal") { return Ptr(new CGALMeshGen); }
+    using InexactKernel = CGAL::Exact_predicates_inexact_constructions_kernel;
+    using ExactKernel = CGAL::Exact_predicates_exact_constructions_kernel;
+    if (engine_name == "cgal") {
+        using CGALEngine = CGALMeshGen<
+            InexactKernel,
+            CGALDomainType::EXPLICIT_WITH_FEATURES>;
+        return std::make_shared<CGALEngine>();
+    }
+    if (engine_name == "cgal_no_features") {
+        using CGALEngine = CGALMeshGen<
+            InexactKernel,
+            CGALDomainType::EXPLICIT>;
+        return std::make_shared<CGALEngine>();
+    }
+#if WITH_IGL
+    if (engine_name == "cgal_implicit") {
+        using CGALEngine = CGALMeshGen<
+            InexactKernel,
+            CGALDomainType::IMPLICIT_WITH_FEATURES>;
+        return std::make_shared<CGALEngine>();
+    }
+#endif
 #endif
 #if WITH_TETGEN
     if (engine_name == "tetgen") { return Ptr(new TetGenEngine); }
@@ -38,6 +65,9 @@ TetrahedralizationEngine::Ptr TetrahedralizationEngine::create(
 #endif
 #if WITH_QUARTET
     if (engine_name == "quartet") { return Ptr(new QuartetEngine); }
+#endif
+#if WITH_MMG
+    if (engine_name == "mmg") { return Ptr(new MMGEngine); }
 #endif
 
     std::stringstream err_msg;
