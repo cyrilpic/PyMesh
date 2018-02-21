@@ -7,7 +7,7 @@
 #include <Core/EigenTypedef.h>
 #include <Core/Exception.h>
 #include "SparseSolver.h"
-#include "third_party/SparseMatrices.hh"
+//#include "third_party/SparseMatrices.hh"
 
 #include <iostream>
 
@@ -16,37 +16,49 @@ namespace PyMesh {
 template <typename Engine>
 class SparseSolverImplementation : public SparseSolver {
     public:
+        virtual void compute(const ZSparseMatrix& matrix) {
+            m_engine.compute(matrix);
+        }
+
         virtual void analyze_pattern(const ZSparseMatrix& matrix) {
             m_engine.analyzePattern(matrix);
-            check_info();
+            // Some engines such as SparseLU left info as undefined at this
+            // stage...  So skipping the check for now.
+            //check_info("analyze_pattern");
         }
 
         virtual void factorize(const ZSparseMatrix& matrix) {
             m_engine.factorize(matrix);
-            check_info();
+            check_info("factorize");
         }
 
         virtual MatrixF solve(const MatrixF& rhs) {
-            auto x = m_engine.solve(rhs);
+            MatrixF x = m_engine.solve(rhs);
+            check_info("solve");
             return x;
         }
 
     private:
-        void check_info() {
+        void check_info(const std::string& stage="") {
             switch (m_engine.info()) {
                 case Eigen::Success:
                     return;
                 case Eigen::NumericalIssue:
-                    throw RuntimeError("Eigen sparse solver encounters numerical issue");
+                    throw RuntimeError(stage +
+                            ": Eigen sparse solver encounters numerical issue");
                     break;
                 case Eigen::NoConvergence:
-                    throw RuntimeError("Eigen sparse solver did not converge");
+                    throw RuntimeError(stage +
+                            ": Eigen sparse solver did not converge");
                     break;
                 case Eigen::InvalidInput:
-                    throw RuntimeError("Eigen sparse solver has invalid input");
+                    throw RuntimeError(stage +
+                            ": Eigen sparse solver has invalid input");
                     break;
                 default:
-                    throw RuntimeError("Unknown eigen sparse solver error");
+                    throw RuntimeError(stage +
+                            ": Unknown eigen sparse solver error (" +
+                            std::to_string(m_engine.info()) + ")");
             }
         }
 
@@ -54,54 +66,118 @@ class SparseSolverImplementation : public SparseSolver {
         Engine m_engine;
 };
 
-//template<>
-//class SparseSolverImplementation<UmfpackFactorizer> : public SparseSolver {
-//    public:
-//        typedef std::shared_ptr<UmfpackFactorizer> FactorizerPtr;
-//
-//        virtual void analyze_pattern(const ZSparseMatrix& matrix) {}
-//
-//        virtual void factorize(const ZSparseMatrix& matrix) {
-//            m_matrix = ZSparseMatrix2SuiteSparseMatrix(matrix);
-//            m_factorizer = FactorizerPtr(new UmfpackFactorizer(m_matrix));
-//        }
-//
-//        virtual MatrixF solve(const MatrixF& rhs) {
-//            VectorF sol;
-//            m_factorizer->solve(rhs, sol);
-//            return sol;
-//        }
-//
-//    protected:
-//        SuiteSparseMatrix ZSparseMatrix2SuiteSparseMatrix(
-//                const ZSparseMatrix& matrix) const {
-//            SuiteSparseMatrix ss_matrix;
-//            const size_t outer_size = matrix.get_outer_size();
-//            const size_t inner_size = matrix.get_inner_size();
-//            const size_t value_size = matrix.get_value_size();
-//
-//            ss_matrix.Ap.resize(outer_size);
-//            ss_matrix.Ai.resize(inner_size);
-//            ss_matrix.Ax.resize(value_size);
-//
-//            std::copy(matrix.outerIndexPtr(), matrix.outerIndexPtr() + outer_size,
-//                    ss_matrix.Ap.begin());
-//            std::copy(matrix.innerIndexPtr(), matrix.innerIndexPtr() + inner_size,
-//                    ss_matrix.Ai.begin());
-//            std::copy(matrix.valuePtr(), matrix.valuePtr() + value_size,
-//                    ss_matrix.Ax.begin());
-//
-//            ss_matrix.m = matrix.rows();
-//            ss_matrix.n = matrix.cols();
-//            ss_matrix.nz = value_size;
-//
-//            return ss_matrix;
-//        }
-//
-//    protected:
-//        SuiteSparseMatrix m_matrix;
-//        FactorizerPtr m_factorizer;
-//};
+template <typename Engine>
+class SparseSolverImplementationWithLocalCopy : public SparseSolver {
+    public:
+        virtual void compute(const ZSparseMatrix& matrix) {
+            m_matrix = matrix;
+            m_engine.compute(m_matrix);
+        }
 
+        virtual void analyze_pattern(const ZSparseMatrix& matrix) {
+            m_engine.analyzePattern(matrix);
+        }
+
+        virtual void factorize(const ZSparseMatrix& matrix) {
+            m_matrix = matrix;
+            m_engine.factorize(m_matrix);
+            check_info("factorize");
+        }
+
+        virtual MatrixF solve(const MatrixF& rhs) {
+            MatrixF x = m_engine.solve(rhs);
+            check_info("solve");
+            return x;
+        }
+
+    private:
+        void check_info(const std::string& stage="") {
+            switch (m_engine.info()) {
+                case Eigen::Success:
+                    return;
+                case Eigen::NumericalIssue:
+                    throw RuntimeError(stage +
+                            ": Eigen sparse solver encounters numerical issue");
+                    break;
+                case Eigen::NoConvergence:
+                    throw RuntimeError(stage +
+                            ": Eigen sparse solver did not converge");
+                    break;
+                case Eigen::InvalidInput:
+                    throw RuntimeError(stage +
+                            ": Eigen sparse solver has invalid input");
+                    break;
+                default:
+                    throw RuntimeError(stage +
+                            ": Unknown eigen sparse solver error (" +
+                            std::to_string(m_engine.info()) + ")");
+            }
+        }
+
+    protected:
+        Engine m_engine;
+        // Note: A local copy of the matrix is nessarary to ensure the original 
+        // matrix remains valid during the iterations.
+        ZSparseMatrix m_matrix;
+};
+
+template <typename Engine>
+class IterativeSparseSolverImplementation : public SparseSolver {
+    public:
+        virtual void compute(const ZSparseMatrix& matrix) {
+            m_matrix = matrix;
+            m_engine.compute(m_matrix);
+        }
+
+        virtual void analyze_pattern(const ZSparseMatrix& matrix) {
+            m_engine.analyzePattern(matrix);
+        }
+
+        virtual void factorize(const ZSparseMatrix& matrix) {
+            m_matrix = matrix;
+            m_engine.factorize(m_matrix);
+            check_info("factorize");
+        }
+
+        virtual MatrixF solve(const MatrixF& rhs) {
+            m_engine.setTolerance(m_tol);
+            if (m_max_iterations > 0) {
+                m_engine.setMaxIterations(m_max_iterations);
+            }
+            MatrixF x = m_engine.solve(rhs);
+            check_info("solve");
+            return x;
+        }
+
+    private:
+        void check_info(const std::string& stage="") {
+            switch (m_engine.info()) {
+                case Eigen::Success:
+                    return;
+                case Eigen::NumericalIssue:
+                    throw RuntimeError(stage +
+                            ": Eigen sparse solver encounters numerical issue");
+                    break;
+                case Eigen::NoConvergence:
+                    throw RuntimeError(stage +
+                            ": Eigen sparse solver did not converge");
+                    break;
+                case Eigen::InvalidInput:
+                    throw RuntimeError(stage +
+                            ": Eigen sparse solver has invalid input");
+                    break;
+                default:
+                    throw RuntimeError(stage +
+                            ": Unknown eigen sparse solver error (" +
+                            std::to_string(m_engine.info()) + ")");
+            }
+        }
+
+    protected:
+        Engine m_engine;
+        // Note: A local copy of the matrix is nessarary to ensure the original
+        // matrix remains valid during the iterations.
+        ZSparseMatrix m_matrix;
+};
 
 }

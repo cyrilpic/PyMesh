@@ -1,6 +1,16 @@
 FROM python:alpine3.6
 
 ENV PYMESH_PATH /root/PyMesh
+WORKDIR $PYMESH_PATH
+
+RUN git submodule update --init && \
+rm -rf $PYMESH_PATH/third_party/build && \
+rm -rf $PYMESH_PATH/build && \
+mkdir -p $PYMESH_PATH/third_party/build && \
+mkdir -p $PYMESH_PATH/build && \
+pip install -r $PYMESH_PATH/python/requirements.txt
+
+RUN ./setup.py bdist_wheel && rm -rf build third_party/build && pip install dist/pymesh2-0.1.14-cp36-cp36m-linux_x86_64.whl
 WORKDIR /root/
 COPY systime.patch /root/systime.patch
 

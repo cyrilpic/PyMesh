@@ -6,6 +6,7 @@ PYBIND11_ADD_MODULE(PyMesh module.cpp
     PyConvexHull.cpp
     PyDMAT.cpp
     PyFEM.cpp
+    PyHashGrid.cpp
     PyIGL.cpp
     PyMeshUtils.cpp
     PyMesh.cpp
@@ -14,6 +15,7 @@ PYBIND11_ADD_MODULE(PyMesh module.cpp
     PyOuterHull.cpp
     PyPredicates.cpp
     PySelfIntersectionResolver.cpp
+    PySparseSolver.cpp
     PyTetgen.cpp
     PyTetrahedralization.cpp
     PyTriangle.cpp
@@ -33,6 +35,7 @@ TARGET_LINK_LIBRARIES(PyMesh PRIVATE
     lib_self_intersection
     lib_boolean
     lib_outer_hull
+    lib_SparseSolver
     lib_tetrahedralization
     lib_triangle_wrapper
     lib_triangulation

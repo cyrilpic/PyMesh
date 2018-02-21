@@ -23,6 +23,7 @@ from .convex_hull import convex_hull
 from .CSGTree import CSGTree
 from .exact_arithmetic import Gmpz, Gmpq
 from .HarmonicSolver import HarmonicSolver
+from .HashGrid import HashGrid
 from .material import Material
 from .selfintersection import resolve_self_intersection
 from .selfintersection import detect_self_intersection
@@ -43,6 +44,7 @@ from .triangle import triangle
 from .tetgen import tetgen
 from .triangulate import triangulate_beta
 from .wires import *
+from .SparseSolver import SparseSolver
 
 __all__ = [
         "Mesh",
@@ -80,34 +82,11 @@ __all__ = [
         "distance_to_mesh",
         "do_intersect",
         "VoxelGrid",
-        "HarmonicSolver"
+        "HarmonicSolver",
+        "SparseSolver",
+        "HashGrid",
         ];
 __all__ += meshutils.__all__;
 __all__ += misc.__all__;
 __all__.append("wires");
 
-#try:
-#    import PyTriangle, PyTriangulation
-#except ImportError:
-#    pass;
-#else:
-#    from .triangulate import triangulate, retriangulate, retriangulate_raw
-#    from .triangulate import triangulate_beta
-#    __all__ += ["triangulate", "retriangulate", "retriangulate_raw",
-#            "triangulate_beta"];
-#
-#try:
-#    import PyWires
-#except ImportError:
-#    pass;
-#else:
-#    from . import wires
-#    __all__.append("wires");
-#
-#try:
-#    from .Solver import SparseSolver
-#    __all__.append("SparseSolver");
-#except ImportError:
-#    pass;
-#
-#
